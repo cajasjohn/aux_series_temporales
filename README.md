@@ -1,2 +1,2 @@
 # Descripción
-## Archivos ".py" con funciones auxiliares para análisis de series temporales
+### Archivos ".py" con funciones auxiliares para análisis de series temporales
