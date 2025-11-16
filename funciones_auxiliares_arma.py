@@ -55,9 +55,10 @@ def sim_dado(num_lanzamientos=1000,num_realizaciones=1,semilla=None, graficar=Tr
 ################################################################
 def prom_acum(serie,
               resultados=False,
-              mu=None):
+              mu=None,
+              tam_fig=(14,5)):
     serie_pa=np.cumsum(serie)/np.arange(1, len(serie) + 1)
-    plt.figure(figsize=(14, 5))
+    plt.figure(figsize=tam_fig)
     plt.plot(range(1, len(serie_pa) + 1), serie_pa, linewidth=2, color="green",label="Promedio acumulado")
     plt.title("Promedio acumulado")
     plt.xlabel("Tiempo (t)")
