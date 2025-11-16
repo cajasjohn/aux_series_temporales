@@ -313,16 +313,17 @@ def trans_arma_mainf(cte=0,
 
 
     
-#########################################################    
+###########################################################    
 ### Función que simula un proceso de caminata aleatoria ###
-#########################################################
+###########################################################
 def simulacion_caminata_aleatoria(valor_inic=0, 
                                 deriva=0, 
                                 sigma2=1, 
                                 num_obs=100, 
                                 semilla=None, 
                                 graficar=True, 
-                                resultados=False):
+                                resultados=False,
+                                 tam_fig=(14, 5)):
     if semilla is not None:
         np.random.seed(semilla) #Definimos valor semilla si se lo incluyó
     
@@ -330,7 +331,7 @@ def simulacion_caminata_aleatoria(valor_inic=0,
     
     #Graficamos el proceso con raíz unitaria
     if graficar:
-        plt.figure(figsize=(14, 5))
+        plt.figure(figsize=tam_fig)
         plt.plot(range(1, len(sim) + 1), sim, linewidth=1)
         plt.title(f"Simulación de un proceso de caminata aleatoria {"sin" if deriva==0 else "con"} deriva")
         plt.xlabel("Tiempo (t)")
