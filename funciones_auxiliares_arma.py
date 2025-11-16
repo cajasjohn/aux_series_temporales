@@ -45,7 +45,7 @@ def sim_dado(num_lanzamientos=1000,num_realizaciones=1,semilla=None, graficar=Tr
         plt.show()
         
     if resultados:
-        return realizaciones
+        return realizaciones[0]
 
 
 
