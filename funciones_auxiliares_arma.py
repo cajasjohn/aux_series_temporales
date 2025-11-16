@@ -25,7 +25,7 @@ from typing import Optional, Union
 #####################################################
 ### Función que simula el lanzamiento de un dado  ###
 #####################################################
-def sim_dado(num_lanzamientos=1000,num_realizaciones=1,semilla=None, graficar=True, resultados=False):
+def sim_dado(num_lanzamientos=1000,num_realizaciones=1,semilla=None, graficar=True, resultados=False,tam_fig=(14,4)):
     #Valor semilla para controlar la generación de números pesudoaleatorios si se desea
     if semilla is not None:
         np.random.seed(semilla) 
@@ -35,7 +35,7 @@ def sim_dado(num_lanzamientos=1000,num_realizaciones=1,semilla=None, graficar=Tr
     
     #Gráfico de la realización si se desea
     if graficar:
-        plt.figure(figsize=(14, 4))
+        plt.figure(figsize=tam_fig)
         for i in range(num_realizaciones):
             plt.plot(range(1, num_lanzamientos + 1), realizaciones[i])
         plt.title(f"Simulación de un proceso estocástico: lanzamiento de un dado (número de realizaciones = {num_realizaciones})")
