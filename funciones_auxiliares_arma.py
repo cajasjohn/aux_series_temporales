@@ -317,30 +317,50 @@ def trans_arma_mainf(cte=0,
 ### Función que simula un proceso de caminata aleatoria ###
 ###########################################################
 def simulacion_caminata_aleatoria(valor_inic=0, 
-                                deriva=0, 
-                                sigma2=1, 
-                                num_obs=100, 
-                                semilla=None, 
-                                graficar=True, 
-                                resultados=False,
-                                 tam_fig=(14, 5)):
+                                  deriva=0, 
+                                  sigma2=1, 
+                                  num_obs=100, 
+                                  semilla=None, 
+                                  graficar=True, 
+                                  resultados=False,
+                                  tam_fig=(14, 5),
+                                  num_realizaciones=1):
+
     if semilla is not None:
-        np.random.seed(semilla) #Definimos valor semilla si se lo incluyó
-    
-    sim=valor_inic + np.cumsum(np.random.normal(loc=deriva, scale=sigma2**0.5, size=num_obs))
-    
-    #Graficamos el proceso con raíz unitaria
+        np.random.seed(semilla)
+
+    # Guardar múltiples simulaciones
+    sims = []
+
+    for _ in range(num_realizaciones):
+        sim = valor_inic + np.cumsum(
+            np.random.normal(loc=deriva, scale=sigma2**0.5, size=num_obs)
+        )
+        sims.append(sim)
+
+    sims = np.array(sims)  # shape: (num_realizaciones, num_obs)
+
+    # Graficar
     if graficar:
         plt.figure(figsize=tam_fig)
-        plt.plot(range(1, len(sim) + 1), sim, linewidth=1)
-        plt.title(f"Simulación de un proceso de caminata aleatoria {"sin" if deriva==0 else "con"} deriva")
+        
+        for i in range(num_realizaciones):
+            plt.plot(range(1, num_obs + 1), sims[i], linewidth=1)
+
+        titulo = "Simulación de un proceso de caminata aleatoria "
+        titulo += "sin deriva" if deriva == 0 else "con deriva"
+
+        if num_realizaciones > 1:
+            titulo += f" ({num_realizaciones} realizaciones)"
+
+        plt.title(titulo)
         plt.xlabel("Tiempo (t)")
         plt.ylabel("Y(t)")
         plt.grid()
         plt.show()
-        
+
     if resultados:
-        return sim
+        return sims
 
 
 ##############################################################
