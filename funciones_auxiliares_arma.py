@@ -366,32 +366,52 @@ def simulacion_caminata_aleatoria(valor_inic=0,
 ##############################################################
 #### Función que simula un proceso ARCH(1) de forma manual ###
 ##############################################################
-def simulacion_arch1(mu=0, 
+def simulacion_arch1(mu=0,  
                      alpha0=0.2, 
                      alpha1=0.8, 
                      num_obs=100, 
                      semilla=None, 
                      graficar=True, 
                      resultados=False,
-                     tam_fig=(8,3)
+                     tam_fig=(8,3),
+                     num_realizaciones=1
                      ):
     
     if semilla is not None:
         np.random.seed(semilla)
-    z = np.random.normal(0, 1, size=num_obs)
-    y = np.zeros(num_obs)
-    sigma2 = np.zeros(num_obs)
-    sigma2[0] = alpha0 / (1 - alpha1) if alpha1 < 1 else 1
-    y[0] = mu + np.sqrt(sigma2[0]) * z[0]
-    for t in range(1, num_obs):
-        sigma2[t] = alpha0 + alpha1 * y[t-1]**2
-        y[t] = mu + np.sqrt(sigma2[t]) * z[t]
+    
+    # Lista para guardar las distintas realizaciones de y
+    lista_y = []
 
-    #Graficamos el proceso con heterocedasticidad condicional
+    for _ in range(num_realizaciones):
+        z = np.random.normal(0, 1, size=num_obs)
+        y = np.zeros(num_obs)
+        sigma2 = np.zeros(num_obs)
+
+        # Varianza inicial (no cambia la lógica original)
+        sigma2[0] = alpha0 / (1 - alpha1) if alpha1 < 1 else 1
+        y[0] = mu + np.sqrt(sigma2[0]) * z[0]
+
+        for t in range(1, num_obs):
+            sigma2[t] = alpha0 + alpha1 * y[t-1]**2
+            y[t] = mu + np.sqrt(sigma2[t]) * z[t]
+
+        lista_y.append(y)
+
+    # Convertimos a array de shape (num_realizaciones, num_obs)
+    ys = np.array(lista_y)
+
+    # Graficamos el proceso con heterocedasticidad condicional
     if graficar:
         plt.figure(figsize=tam_fig)
-        plt.plot(range(1, len(y) + 1), y, linewidth=1)
-        plt.title("Simulación de un proceso con heterocedasticidad condicional")
+        for i in range(num_realizaciones):
+            plt.plot(range(1, num_obs + 1), ys[i], linewidth=1)
+
+        titulo = "Simulación de un proceso con heterocedasticidad condicional"
+        if num_realizaciones > 1:
+            titulo += f" ({num_realizaciones} realizaciones)"
+
+        plt.title(titulo)
         plt.xlabel("Tiempo (t)")
         plt.ylabel("Y(t)")
         plt.xticks()
@@ -399,7 +419,11 @@ def simulacion_arch1(mu=0,
         plt.show()
 
     if resultados:
-        return y
+        # Para no romper código existente, si hay una sola realización devolvemos un 1D
+        if num_realizaciones == 1:
+            return ys[0]
+        else:
+            return ys
     
 
 #################################################################
