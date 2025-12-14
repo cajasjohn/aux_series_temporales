@@ -123,7 +123,7 @@ def acf_teorica_arma(pol_ma=[1],
     if graficar:
         plt.figure(figsize=tam_fig)
         plt.stem(range(len(acf_teorica_arma_est)),acf_teorica_arma_est)
-        plt.title(f"Función de autocorrelación (ACF) teórica de un proceso ARMA({len(pol_ar)-1},{len(pol_ma)-1})")
+        plt.title(f"Correlograma teórico ACF de un proceso ARMA({len(pol_ar)-1},{len(pol_ma)-1})")
         plt.xlabel("")
         plt.ylabel("")
         for i, val in enumerate(acf_teorica_arma_est):
