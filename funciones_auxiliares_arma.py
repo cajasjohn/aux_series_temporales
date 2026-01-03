@@ -243,7 +243,7 @@ def pacf_teorica_arma(pol_ma=[1],
     if graficar:
         plt.figure(figsize=tam_fig)
         plt.stem(range(len(pacf_teorica_arma_est)),pacf_teorica_arma_est)
-        plt.title(f"Función de autocorrelación parcial (PACF) teórica de proceso ARMA({len(pol_ar)-1},{len(pol_ma)-1})")
+        plt.title(f"Correlograma teórico PACF de un proceso ARMA({len(pol_ar)-1},{len(pol_ma)-1})")
         plt.xlabel("")
         plt.ylabel("")
         for i, val in enumerate(pacf_teorica_arma_est):
