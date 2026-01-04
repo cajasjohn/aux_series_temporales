@@ -244,8 +244,8 @@ def pacf_teorica_arma(pol_ma=[1],
         plt.figure(figsize=tam_fig)
         plt.stem(range(len(pacf_teorica_arma_est)),pacf_teorica_arma_est)
         plt.title(f"Correlograma teórico PACF de un proceso ARMA({len(pol_ar)-1},{len(pol_ma)-1})")
-        plt.xlabel("")
-        plt.ylabel("")
+        plt.xlabel("Rezagos (j)")
+        plt.ylabel("PACF(j) teórica")
         for i, val in enumerate(pacf_teorica_arma_est):
             if i>0:
                 plt.text(i, val + 0.05*val, f"{val:.2f}", ha='center', va='bottom' if val >= 0 else 'top')
