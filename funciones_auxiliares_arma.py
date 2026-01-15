@@ -537,7 +537,7 @@ def pruebas_heterocedasticidad(
     })
 
     rows.append({
-        "Prueba": "White (LM)",
+        "Prueba": "White (Estadístico LM - multiplicador de Lagrange)",
         "Estadístico": w_lm,
         "Valor p": w_lm_p,
         "Decisión": "No se rechaza homocedasticidad" if w_lm_p > alpha else "Se rechaza homocedasticidad (existe heterocedasticidad)",
@@ -546,7 +546,7 @@ def pruebas_heterocedasticidad(
 
     if white_include_f:
         rows.append({
-            "Prueba": "White (F)",
+            "Prueba": "White (Estadístico F)",
             "Estadístico": w_f,
             "Valor p": w_f_p,
             "Decisión": "No se rechaza homocedasticidad" if w_f_p > alpha else "Se rechaza homocedasticidad (existe heterocedasticidad)",
