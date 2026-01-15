@@ -426,6 +426,141 @@ def simulacion_arch1(mu=0,
             return ys
     
 
+##############################################################
+### Función que evalúa la existencia de heterocedasticidad ###
+##############################################################
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+from statsmodels.stats.diagnostic import het_goldfeldquandt, het_white
+
+def pruebas_heterocedasticidad(
+    y,
+    X=None,
+    *,
+    add_constant=True,
+    gq_split=None,
+    gq_drop=None,
+    gq_alternative="two-sided",
+    white_include_f=True,
+    dropna=True
+):
+    """
+    Devuelve un DataFrame con resultados principales de:
+      - Goldfeld–Quandt (F y p-valor)
+      - White (LM y opcionalmente F)
+
+    Parámetros
+    ----------
+    y : array-like (n,)
+        Serie a testear (p.ej., residuos o residuos estandarizados).
+    X : array-like (n,) o (n,k), opcional
+        Regresores/variable(s) para ordenar (GQ) y para White.
+        Para series temporales, una elección típica es X = t (índice temporal).
+        Si X is None, se usa el índice temporal.
+    add_constant : bool
+        Si True, agrega constante a X (recomendado para White).
+    gq_split : int, opcional
+        Punto de corte para GQ. Si None, statsmodels usa split=nobs//2.
+        Para replicar “primer tercio vs último tercio”: gq_split = n//3.
+    gq_drop : float o int, opcional
+        Observaciones a descartar en el centro (ver statsmodels).
+        Para replicar “primer tercio vs último tercio”: gq_drop = n//3 (o 1/3).
+    gq_alternative : {"increasing","decreasing","two-sided"}
+        Alternativa del test GQ.
+    white_include_f : bool
+        Si True, incluye también el estadístico F y p-valor del test de White.
+    dropna : bool
+        Si True, elimina NaN/inf en y (y filas correspondientes en X).
+
+    Returns
+    -------
+    pandas.DataFrame
+        Tabla con estadísticos, p-valores y metadatos clave.
+    """
+
+    y = np.asarray(y).squeeze()
+    if y.ndim != 1:
+        raise ValueError("y debe ser un vector 1D.")
+
+    n = len(y)
+
+    # Si X no se proporciona, usar índice temporal
+    if X is None:
+        X = np.arange(n)
+
+    X = np.asarray(X)
+
+    # Asegurar 2D
+    if X.ndim == 1:
+        X = X.reshape(-1, 1)
+    elif X.ndim != 2:
+        raise ValueError("X debe ser 1D o 2D.")
+
+    if len(X) != n:
+        raise ValueError("X y y deben tener el mismo número de observaciones.")
+
+    # Limpiar NaN/inf si es necesario
+    if dropna:
+        mask = np.isfinite(y)
+        # también exigir que X sea finita por fila
+        mask &= np.all(np.isfinite(X), axis=1)
+        y = y[mask]
+        X = X[mask, :]
+        n = len(y)
+
+    # Agregar constante si corresponde (muy recomendable para White)
+    X_use = sm.add_constant(X, has_constant="add") if add_constant else X
+
+    # ---------- Goldfeld–Quandt ----------
+    gq_F, gq_p, gq_order = het_goldfeldquandt(
+        y, X_use,
+        split=gq_split,
+        drop=gq_drop,
+        alternative=gq_alternative,
+        store=False
+    )
+
+    # ---------- White ----------
+    # White requiere exog con constante (idealmente) y usa términos cruzados internamente
+    w_lm, w_lm_p, w_f, w_f_p = het_white(y, X_use)
+
+    rows = []
+
+    rows.append({
+        "Test": "Goldfeld–Quandt",
+        "Statistic": gq_F,
+        "p_value": gq_p,
+        "df": None,
+        "Details": f"alternative={gq_alternative}, split={gq_split}, drop={gq_drop}, add_constant={add_constant}"
+    })
+
+    rows.append({
+        "Test": "White (LM)",
+        "Statistic": w_lm,
+        "p_value": w_lm_p,
+        "df": None,
+        "Details": f"LM version, add_constant={add_constant}"
+    })
+
+    if white_include_f:
+        rows.append({
+            "Test": "White (F)",
+            "Statistic": w_f,
+            "p_value": w_f_p,
+            "df": None,
+            "Details": f"F version, add_constant={add_constant}"
+        })
+
+    out = pd.DataFrame(rows)
+
+    # Formato amigable
+    out["Statistic"] = out["Statistic"].astype(float)
+    out["p_value"] = out["p_value"].astype(float)
+
+    return out
+
+
 #################################################################
 #### Función que obtiene raíces de polinomios de retardo ARMA ###
 #################################################################
