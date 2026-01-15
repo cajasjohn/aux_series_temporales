@@ -528,35 +528,32 @@ def pruebas_heterocedasticidad(
     rows = []
 
     rows.append({
-        "Test": "Goldfeld–Quandt",
-        "Statistic": gq_F,
-        "p_value": gq_p,
-        "df": None,
-        "Details": f"alternative={gq_alternative}, split={gq_split}, drop={gq_drop}, add_constant={add_constant}"
+        "Prueba": "Goldfeld–Quandt",
+        "Estadístico": gq_F,
+        "Valor p": gq_p,
+        "Detalles": f"alternative={gq_alternative}, split={gq_split}, drop={gq_drop}, add_constant={add_constant}"
     })
 
     rows.append({
-        "Test": "White (LM)",
-        "Statistic": w_lm,
-        "p_value": w_lm_p,
-        "df": None,
-        "Details": f"LM version, add_constant={add_constant}"
+        "Prueba": "White (LM)",
+        "Estadístico": w_lm,
+        "Valor p": w_lm_p,
+        "Detalles": f"LM version, add_constant={add_constant}"
     })
 
     if white_include_f:
         rows.append({
-            "Test": "White (F)",
-            "Statistic": w_f,
-            "p_value": w_f_p,
-            "df": None,
-            "Details": f"F version, add_constant={add_constant}"
+            "Prueba": "White (F)",
+            "Estadístico": w_f,
+            "Valor p": w_f_p,
+            "Detalles": f"F version, add_constant={add_constant}"
         })
 
     out = pd.DataFrame(rows)
 
     # Formato amigable
-    out["Statistic"] = out["Statistic"].astype(float)
-    out["p_value"] = out["p_value"].astype(float)
+    out["Estadístico"] = out["Estadístico"].astype(float)
+    out["Valor p"] = out["Valor p"].astype(float)
 
     return out
 
