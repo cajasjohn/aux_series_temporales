@@ -561,6 +561,30 @@ def pruebas_heterocedasticidad(
 
     return out
 
+###########################################################
+### Función para prueba ARCH de residuos estandarizados ###
+###########################################################
+def prueba_arch_res_est(residuos,alpha=0.05,num_rezagos=10):
+    z = np.asarray(residuos).ravel()
+    z = z[~np.isnan(z)]
+    n = z.size
+
+    lm_stat, lm_p, f_stat, f_p = het_arch(z, nlags=num_rezagos)
+
+    df = pd.DataFrame({
+        "Prueba": ["Engle (LM)", "Engle (F)"],
+        "Estadístico": [lm_stat, f_stat],
+        "p-valor":     [lm_p,     f_p],
+        "Decisión": [
+            "No se rechaza H0 (no existe ARCH)" if lm_p > alpha else "Se rechaza H0 (existe ARCH)",
+            "No se rechaza H0 (no existe ARCH)" if f_p > alpha else "Se rechaza H0 (existe ARCH)"
+        ],
+        "nlags": [num_rezagos, num_rezagos]
+    })
+
+    # Redondeo simple de columnas numéricas
+    df[["Estadístico", "p-valor"]] = df[["Estadístico", "p-valor"]].astype(float).round(4)
+    return df
 
 #################################################################
 #### Función que obtiene raíces de polinomios de retardo ARMA ###
