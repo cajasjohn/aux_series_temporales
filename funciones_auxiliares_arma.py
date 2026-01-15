@@ -437,6 +437,7 @@ from statsmodels.stats.diagnostic import het_goldfeldquandt, het_white
 def pruebas_heterocedasticidad(
     y,
     X=None,
+    alpha=0.05,
     *,
     add_constant=True,
     gq_split=None,
@@ -531,6 +532,7 @@ def pruebas_heterocedasticidad(
         "Prueba": "Goldfeld–Quandt",
         "Estadístico": gq_F,
         "Valor p": gq_p,
+        "Decisión": "No se rechaza homocedasticidad" if gq_p > alpha else "Se rechaza homocedasticidad (existe heterocedasticidad)",
         "Detalles": f"alternative={gq_alternative}, split={gq_split}, drop={gq_drop}, add_constant={add_constant}"
     })
 
@@ -538,6 +540,7 @@ def pruebas_heterocedasticidad(
         "Prueba": "White (LM)",
         "Estadístico": w_lm,
         "Valor p": w_lm_p,
+        "Decisión": "No se rechaza homocedasticidad" if w_lm_p > alpha else "Se rechaza homocedasticidad (existe heterocedasticidad)",
         "Detalles": f"LM version, add_constant={add_constant}"
     })
 
@@ -546,6 +549,7 @@ def pruebas_heterocedasticidad(
             "Prueba": "White (F)",
             "Estadístico": w_f,
             "Valor p": w_f_p,
+            "Decisión": "No se rechaza homocedasticidad" if w_f_p > alpha else "Se rechaza homocedasticidad (existe heterocedasticidad)",
             "Detalles": f"F version, add_constant={add_constant}"
         })
 
