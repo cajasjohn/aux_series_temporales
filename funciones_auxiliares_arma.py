@@ -1313,6 +1313,164 @@ def prueba_arch(z_hat, nlags=10, alpha=0.05, redondeo=4):
     return df
 
 
+##########################################################################
+### Función para obtener IRF con intervalos bootstrap luego de SARIMAX ###
+##########################################################################
+def irf_bootstrap_sarimax(
+    res,
+    steps=20,
+    B=500,
+    alpha=0.05,
+    fit_kwargs=None,
+    seed=123,
+    drop_failed=True,
+    shock="unit",              # "unit" o "1sd"
+    include_irf=True,
+    include_cum_irf=True,
+    cum_method="cumsum",       # por ahora solo cumsum (acumulada simple)
+):
+    """
+    Bandas bootstrap (paramétricas) para:
+      - IRF (impulse response function)
+      - IRF acumulada (cumulative IRF)
+
+    usando un SARIMAX ya estimado (res).
+
+    Parámetros clave
+    ---------------
+    shock:
+      - "unit": shock inicial = 1
+      - "1sd":  shock inicial = sigma_hat (desviación estándar estimada de la innovación)
+
+    include_irf / include_cum_irf:
+      - Permiten devolver IRF, IRF acumulada, o ambas.
+
+    Retorna
+    -------
+    df_irf : DataFrame o None
+    df_cum : DataFrame o None
+    draws  : dict con matrices bootstrap (si aplica)
+            keys posibles: {"irf", "cum_irf"}
+    """
+    fit_kwargs = fit_kwargs or {}
+    rng = np.random.default_rng(seed)
+
+    # --- Validaciones ---
+    shock = shock.lower()
+    if shock not in ("unit", "1sd"):
+        raise ValueError("shock debe ser 'unit' o '1sd'.")
+    if not (include_irf or include_cum_irf):
+        raise ValueError("Debes activar include_irf y/o include_cum_irf.")
+    if include_cum_irf and cum_method != "cumsum":
+        raise ValueError("cum_method actualmente solo soporta 'cumsum'.")
+
+    # --- Tamaño del shock ---
+    shock_size = 1.0
+    if shock == "1sd":
+        # En SARIMAX suele estar sigma2 en params
+        if hasattr(res, "params") and "sigma2" in getattr(res.params, "index", []):
+            shock_size = float(np.sqrt(res.params["sigma2"]))
+        else:
+            # Fallback: RMS de residuos
+            eps = np.asarray(res.resid).squeeze()
+            shock_size = float(np.sqrt(np.nanmean(eps**2)))
+
+    # --- IRF puntual (escalada) ---
+    irf0 = np.asarray(res.impulse_responses(steps=steps)).squeeze()[: steps + 1]
+    irf0 = irf0 * shock_size
+
+    # --- IRF acumulada puntual ---
+    cum0 = np.cumsum(irf0) if include_cum_irf else None
+
+    # --- Recuperar especificación del modelo para reestimar ---
+    model = res.model
+    endog0 = np.asarray(model.endog).squeeze()
+    n = len(endog0)
+
+    order = model.order
+    seasonal_order = model.seasonal_order
+    trend = model.trend
+    enforce_stationarity = getattr(model, "enforce_stationarity", True)
+    enforce_invertibility = getattr(model, "enforce_invertibility", True)
+
+    irf_list = []
+
+    # --- Bootstrap ---
+    for _ in range(B):
+        try:
+            # 1) Simular desde el modelo estimado
+            yb = np.asarray(res.simulate(n, random_state=rng)).squeeze()
+
+            # 2) Reestimar el mismo modelo
+            modb = SARIMAX(
+                yb,
+                order=order,
+                seasonal_order=seasonal_order,
+                trend=trend,
+                enforce_stationarity=enforce_stationarity,
+                enforce_invertibility=enforce_invertibility,
+            )
+            resb = modb.fit(disp=False, **fit_kwargs)
+
+            # 3) IRF de la réplica (escalada)
+            irfb = np.asarray(resb.impulse_responses(steps=steps)).squeeze()[: steps + 1]
+            irf_list.append(irfb * shock_size)
+
+        except Exception:
+            if not drop_failed:
+                raise
+            continue
+
+    if len(irf_list) == 0:
+        raise RuntimeError(
+            "Todas las réplicas bootstrap fallaron. "
+            "Prueba aumentar maxiter/cambiar method en fit_kwargs."
+        )
+
+    irf_draws = np.vstack(irf_list)  # (B_eff, steps+1)
+
+    # --- Construir outputs ---
+    draws = {}
+    h = np.arange(steps + 1)
+
+    df_irf = None
+    if include_irf:
+        lo = np.quantile(irf_draws, alpha / 2, axis=0)
+        hi = np.quantile(irf_draws, 1 - alpha / 2, axis=0)
+        med = np.quantile(irf_draws, 0.5, axis=0)
+
+        df_irf = pd.DataFrame({
+            "h": h,
+            "irf": irf0,
+            "lower": lo,
+            "upper": hi,
+            "median_boot": med,
+            "B_effective": irf_draws.shape[0],
+            "shock": shock,
+            "shock_size": shock_size,
+        })
+        draws["irf"] = irf_draws
+
+    df_cum = None
+    if include_cum_irf:
+        cum_draws = np.cumsum(irf_draws, axis=1)  # acumulada por réplica
+        lo_c = np.quantile(cum_draws, alpha / 2, axis=0)
+        hi_c = np.quantile(cum_draws, 1 - alpha / 2, axis=0)
+        med_c = np.quantile(cum_draws, 0.5, axis=0)
+
+        df_cum = pd.DataFrame({
+            "h": h,
+            "cum_irf": cum0,
+            "lower": lo_c,
+            "upper": hi_c,
+            "median_boot": med_c,
+            "B_effective": cum_draws.shape[0],
+            "shock": shock,
+            "shock_size": shock_size,
+        })
+        draws["cum_irf"] = cum_draws
+
+    return df_irf, df_cum, draws
 
 
 
