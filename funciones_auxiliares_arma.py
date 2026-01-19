@@ -1065,7 +1065,8 @@ def prediccion_grafico(
     ax.set_xlabel("Tiempo" if isinstance(endog_index, (pd.DatetimeIndex, pd.PeriodIndex)) else "Índice")
     ax.set_ylabel("Nivel de la serie")
     ax.set_title("Pronóstico SARIMAX con IC y media teórica")
-    ax.legend(loc="best")
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15))
+    #ax.legend(loc="best")
     ax.grid(True, which="both", linestyle=":", linewidth=0.5)
     plt.tight_layout()
 
