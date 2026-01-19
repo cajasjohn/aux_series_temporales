@@ -961,6 +961,7 @@ def prediccion_grafico(
     connect_last_to_first_forecast: bool = True,
     ax: Optional[plt.Axes] = None,
     resultados=False,
+    tam_fig=figsize=(9, 5),
     media_est=None,
     lim_inf_est=None,
     lim_sup_est=None
@@ -1024,7 +1025,7 @@ def prediccion_grafico(
 
     # Graficar
     if ax is None:
-        fig, ax = plt.subplots(figsize=(9, 5))
+        fig, ax = plt.subplots(tam_fig)
 
     ax.plot(x_hist, y_hist, label="Observado")
 
